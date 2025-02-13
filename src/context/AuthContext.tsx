@@ -3,7 +3,7 @@ import { ReactNode, FC } from "react";
 import authService from "../services/authService";
 import {
   Credentials,
-  User,
+  LoggedUser,
   Tokens,
   AuthContextType,
   RegisterRequest,
@@ -24,7 +24,7 @@ const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       ? JSON.parse(localStorage.getItem("tokens")!)
       : null
   );
-  const [user, setUser] = useState<User | null>(
+  const [user, setUser] = useState<LoggedUser | null>(
     localStorage.getItem("user")
       ? JSON.parse(localStorage.getItem("user")!)
       : null

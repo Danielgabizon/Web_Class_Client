@@ -7,9 +7,10 @@ export interface RegisterRequest extends Credentials {
   email: string;
   fname: string;
   lname: string;
+  profileUrl: string;
 }
 
-export interface User {
+export interface LoggedUser {
   id: string;
   username: string;
 }
@@ -20,7 +21,7 @@ export interface Tokens {
 }
 
 export interface AuthContextType {
-  user: User | null;
+  user: LoggedUser | null;
   tokens: Tokens | null;
   login: (credentials: Credentials) => Promise<void>;
   logout: () => Promise<void>;
