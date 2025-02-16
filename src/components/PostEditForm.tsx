@@ -68,7 +68,7 @@ const PostEditForm = ({
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md w-150">
+    <div className="bg-white p-4 rounded-lg shadow-md w-2xl">
       <h2 className="text-xl font-semibold text-center mb-4">Edit Post</h2>
       {error && (
         <p className="text-red-500 text-center text-sm mb-4">{error}</p>

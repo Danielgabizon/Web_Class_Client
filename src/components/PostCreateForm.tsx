@@ -27,6 +27,7 @@ const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
 
   // Generate preview URL when photo is selected
   useEffect(() => {
+    console.log("PostForm mounted");
     if (!formData.photo) {
       setPreview(null);
       return;
@@ -56,7 +57,7 @@ const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md w-150">
+    <div className="bg-white p-4 rounded-lg shadow-md w-2xl mx-auto">
       <h2 className="text-xl font-semibold text-center mb-4">New Post</h2>
       {error && (
         <p className="text-red-500 text-center text-sm mb-4">{error}</p>
@@ -82,7 +83,7 @@ const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
         />
 
         <div className="flex items-center justify-between space-x-4">
-          <label className="text-gray-600 w-1/4">Photo</label>
+          <label className="text-gray-600 p-3">Photo</label>
 
           <div className="flex items-center space-x-4">
             {/* hidden Input */}

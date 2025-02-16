@@ -48,6 +48,7 @@ const Feed: React.FC = () => {
     setDeletingPost(null);
   };
 
+  // Fetch Posts
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -115,23 +116,25 @@ const Feed: React.FC = () => {
       )}
 
       {/* Create Post Modal */}
-      <Modal isOpen={isCreateModalOpen}>
-        <PostCreateForm onClose={closeCreateModal} />
-      </Modal>
+      {isCreateModalOpen && (
+        <Modal>
+          <PostCreateForm onClose={closeCreateModal} />
+        </Modal>
+      )}
 
       {/* Edit Post Modal */}
-      <Modal isOpen={isEditModalOpen}>
-        {editingPost && (
-          <PostEditForm post={editingPost} onClose={closeEditModal} />
-        )}
-      </Modal>
+      {isEditModalOpen && (
+        <Modal>
+          <PostEditForm post={editingPost!} onClose={closeEditModal} />
+        </Modal>
+      )}
 
       {/* Delete Post Modal */}
-      <Modal isOpen={isDeleteModalOpen}>
-        {deletingPost && (
-          <PostDeleteForm post={deletingPost} onClose={closeDeleteModal} />
-        )}
-      </Modal>
+      {isDeleteModalOpen && (
+        <Modal>
+          <PostDeleteForm post={deletingPost!} onClose={closeDeleteModal} />
+        </Modal>
+      )}
     </div>
   );
 };

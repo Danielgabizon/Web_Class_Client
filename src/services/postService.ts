@@ -21,7 +21,7 @@ const getAllPosts = async (sender?: string): Promise<getAllPostsResponse> => {
 };
 
 const updatePost = async (id: string, post: Post) => {
-  const response = await api.put(`/posts/${id}`, post);
+  const response = await api.put<createPostResponse>(`/posts/${id}`, post);
   return response.data;
 };
 
