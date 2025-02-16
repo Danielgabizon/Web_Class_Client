@@ -1,25 +1,18 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
+//import { useNavigate, Link } from "react-router-dom";
 import Spinner from "./Spinner";
 import uploadImage from "../utilities/uploadImage";
-
-const RegisterForm = () => {
+import postService from "../services/postService";
+const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
   const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-    email: "",
-    fname: "",
-    lname: "",
+    title: "",
+    content: "",
     photo: null as File | null,
   });
-  console.log("registeform render");
+  console.log("PostForm render");
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const { register } = useAuth();
-  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -34,6 +27,7 @@ const RegisterForm = () => {
 
   // Generate preview URL when photo is selected
   useEffect(() => {
+    console.log("PostForm mounted");
     if (!formData.photo) {
       setPreview(null);
       return;
@@ -51,15 +45,10 @@ const RegisterForm = () => {
     setError("");
 
     try {
-      const profileUrl = formData.photo
-        ? await uploadImage(formData.photo)
-        : "";
-      // Exclude photo (which is of type file) and include profileUrl (string) instead
+      const postUrl = formData.photo ? await uploadImage(formData.photo) : "";
       const { photo, ...formDatawithoutPhoto } = formData;
-      await register({ ...formDatawithoutPhoto, profileUrl });
-
-      console.log("Registered successfully");
-      navigate("/login");
+      await postService.createPost({ ...formDatawithoutPhoto, postUrl });
+      window.location.reload();
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -68,62 +57,33 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md w-150">
-      <h2 className="text-xl font-semibold text-center mb-4">Sign up</h2>
-
+    <div className="bg-white p-4 rounded-lg shadow-md w-2xl mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4">New Post</h2>
       {error && (
         <p className="text-red-500 text-center text-sm mb-4">{error}</p>
       )}
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
+          name="title"
+          placeholder="Post's Title"
+          value={formData.title}
           onChange={handleChange}
           required
           className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
         />
         <input
           type="text"
-          name="fname"
-          placeholder="First Name"
-          value={formData.fname}
-          onChange={handleChange}
-          required
-          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
-        />
-        <input
-          type="text"
-          name="lname"
-          placeholder="Last Name"
-          value={formData.lname}
+          name="content"
+          placeholder="Post's Content"
+          value={formData.content}
           onChange={handleChange}
           required
           className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
         />
 
         <div className="flex items-center justify-between space-x-4">
-          <label className="text-gray-600 w-1/4">Profile Photo</label>
+          <label className="text-gray-600 p-3">Photo</label>
 
           <div className="flex items-center space-x-4">
             {/* hidden Input */}
@@ -153,7 +113,7 @@ const RegisterForm = () => {
             <img
               src={preview}
               alt="Preview"
-              className="w-32 h-32 object-cover rounded-full border border-gray-300 shadow-md"
+              className="w-32 h-32 object-cover border border-gray-300 shadow-md"
             />
           </div>
         )}
@@ -164,27 +124,25 @@ const RegisterForm = () => {
             <Spinner />
           </div>
         ) : (
-          <button
-            type="submit"
-            className="w-full bg-[#1877F2] text-white py-2 rounded-lg font-bold hover:bg-[#165DB6] transition"
-          >
-            Submit
-          </button>
+          <div className="flex justify-center space-x-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className=" w-40 bg-gray-300 text-gray-800 py-2 rounded-lg font-bold hover:bg-gray-400 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="w-40 bg-[#1877F2] text-white py-2 rounded-lg font-bold hover:bg-[#165DB6] transition"
+            >
+              Share
+            </button>
+          </div>
         )}
       </form>
-
-      <hr className="border-gray-300 mt-8" />
-      <p className="text-center mt-4 text-gray-600">
-        Already have an account?{" "}
-        <Link
-          to="/login"
-          className="text-[#1877F2] font-semibold hover:underline"
-        >
-          Log in
-        </Link>
-      </p>
     </div>
   );
 };
 
-export default RegisterForm;
+export default PostCreateForm;

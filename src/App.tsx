@@ -6,22 +6,26 @@ import {
 } from "react-router-dom";
 import useAuth from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
+import Feed from "./pages/Feed";
 import LoginPage from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
-import AddPost from "./pages/AddPost";
-import MyPosts from "./pages/MyPosts";
 import PostDetails from "./pages/PostDetails";
-
+import { useEffect } from "react";
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   console.log("PrivateRoute rendered");
+  useEffect(() => {
+    console.log("PrivateRoute mounted");
+  }, []);
   return user ? children : <Navigate to="/login" replace />;
 };
 
 const App: React.FC = () => {
   console.log("App rendered");
+  useEffect(() => {
+    console.log("App mounted");
+  }, []);
   return (
     <Router>
       <Navbar />
@@ -35,15 +39,15 @@ const App: React.FC = () => {
           path="/"
           element={
             <PrivateRoute>
-              <Home />
+              <Feed />
             </PrivateRoute>
           }
         />
         <Route
-          path="/home"
+          path="/feed"
           element={
             <PrivateRoute>
-              <Home />
+              <Feed />
             </PrivateRoute>
           }
         />
@@ -55,22 +59,7 @@ const App: React.FC = () => {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/add-post"
-          element={
-            <PrivateRoute>
-              <AddPost />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/my-posts"
-          element={
-            <PrivateRoute>
-              <MyPosts />
-            </PrivateRoute>
-          }
-        />
+
         <Route
           path="/post/:id"
           element={
