@@ -4,12 +4,17 @@ import Spinner from "./Spinner";
 import uploadImage from "../utilities/uploadImage";
 import postService from "../services/postService";
 import { Post } from "../types/postTypes";
-const PostEditForm = ({
-  onClose,
-  post,
-}: {
-  onClose: () => void;
+
+type PostEditFormProps = {
   post: Post;
+  onPostEdit: (updatedPost: Post) => void;
+  onClose: () => void;
+};
+
+const PostEditForm: React.FC<PostEditFormProps> = ({
+  post,
+  onPostEdit,
+  onClose,
 }) => {
   const [formData, setFormData] = useState({
     title: post.title,
@@ -19,6 +24,41 @@ const PostEditForm = ({
   const [preview, setPreview] = useState<string | null>(post.postUrl || null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      let postUrl = post.postUrl; // Keep the old image if no new one is uploaded
+      if (formData.photo) {
+        postUrl = await uploadImage(formData.photo);
+      }
+
+      const { photo, ...formDatawithoutPhoto } = formData;
+      const { request } = postService.updatePost(post._id!, {
+        ...formDatawithoutPhoto,
+        postUrl,
+      });
+      const response = await request;
+      onPostEdit(response.data.data!);
+      onClose();
+    } catch (error: any) {
+      console.error("Error editing post:", error);
+      if (error.response) {
+        // server responded with a status code that falls out of the range of 2xx
+        setError(error.response.data.message);
+      } else if (error.request) {
+        // request was made but no response received
+        setError("No response from the server. Please try again later.");
+      } else {
+        // something else happened
+        setError("Something went wrong. Please try again later.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,39 +73,11 @@ const PostEditForm = ({
 
   // Generate preview URL when photo is selected
   useEffect(() => {
-    if (!formData.photo) {
-      setPreview(post.postUrl || null);
-      return;
+    if (formData.photo) {
+      const objectUrl = URL.createObjectURL(formData.photo);
+      setPreview(objectUrl);
     }
-
-    const objectUrl = URL.createObjectURL(formData.photo);
-    setPreview(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl); // Cleanup
-  }, [formData.photo, post.postUrl]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      let postUrl = post.postUrl; // Keep the old image if no new one is uploaded
-      if (formData.photo) {
-        postUrl = await uploadImage(formData.photo);
-      }
-      const { photo, ...formDatawithoutPhoto } = formData;
-      await postService.updatePost(post._id!, {
-        ...formDatawithoutPhoto,
-        postUrl,
-      });
-      window.location.reload();
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [formData.photo]);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md w-2xl">

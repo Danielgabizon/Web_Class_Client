@@ -1,6 +1,10 @@
 import { useEffect } from "react";
 
-const Modal = ({ children }: { children: React.ReactNode }) => {
+type ModalProps = {
+  children: React.ReactNode;
+};
+
+const Modal: React.FC<ModalProps> = ({ children }) => {
   useEffect(() => {
     console.log("Modal mounted");
   }, []);

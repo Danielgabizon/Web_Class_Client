@@ -9,15 +9,32 @@ export interface RegisterRequest extends Credentials {
   lname: string;
   profileUrl: string;
 }
+export interface RegisterResponse {
+  _id: string;
+  username: string;
+  email: string;
+  fname: string;
+  lname: string;
+  profileUrl: string;
+}
 
 export interface LoggedUser {
   id: string;
   username: string;
+  userPic: string;
 }
 
 export interface Tokens {
   accessToken: string;
   refreshToken: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  _id: string;
+  username: string;
+  userPic: string;
 }
 
 export interface AuthContextType {
@@ -26,15 +43,4 @@ export interface AuthContextType {
   login: (credentials: Credentials) => Promise<void>;
   logout: () => Promise<void>;
   register: (registerRequest: RegisterRequest) => Promise<void>;
-}
-
-export interface AuthResponse {
-  status: string;
-  data?: {
-    accessToken: string;
-    refreshToken: string;
-    _id: string;
-    username: string;
-  };
-  message?: string;
 }

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { useEffect } from "react";
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
   console.log("Navbar rendered");
 
   useEffect(() => {
@@ -11,10 +11,10 @@ const Navbar = () => {
 
   const { user, logout } = useAuth();
   return (
-    <nav className="p-4 bg-[#4267B2] text-white flex justify-between">
+    <nav className="p-4 bg-[#4267B2] text-white flex justify-between sticky top-0 w-full shadow-md z-50">
       <div>
         <Link to="/" className="text-xl font-bold">
-          MyApp
+          BzzNet
         </Link>
       </div>
       <div className="flex space-x-4 items-center">

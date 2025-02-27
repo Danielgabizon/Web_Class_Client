@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import Spinner from "./Spinner";
 
-const LoginForm = () => {
+const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,13 +12,6 @@ const LoginForm = () => {
   const navigate = useNavigate();
 
   console.log("LoginForm rendered");
-
-  // Handle input changes dynamically
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -29,14 +22,20 @@ const LoginForm = () => {
       console.log("Logged in successfully");
       navigate("/feed");
     } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle input changes dynamically
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md w-150">
+    <div className="bg-white p-4 rounded-lg shadow-md max-w-xl w-full">
       <h2 className="text-xl text-center font-semibold mb-4">Login</h2>
 
       {error && (

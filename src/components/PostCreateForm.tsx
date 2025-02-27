@@ -3,16 +3,57 @@ import { useState, useEffect } from "react";
 import Spinner from "./Spinner";
 import uploadImage from "../utilities/uploadImage";
 import postService from "../services/postService";
-const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
+import { Post } from "../types/postTypes";
+type PostCreateFormProps = {
+  onPostCreate: (newPost: Post) => void;
+  onClose: () => void;
+};
+const PostCreateForm: React.FC<PostCreateFormProps> = ({
+  onPostCreate,
+  onClose,
+}) => {
+  console.log("PostCreateForm render");
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     photo: null as File | null,
   });
-  console.log("PostForm render");
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const postUrl = formData.photo ? await uploadImage(formData.photo) : "";
+      const { photo, ...formDatawithoutPhoto } = formData;
+
+      const { request } = postService.createPost({
+        ...formDatawithoutPhoto,
+        postUrl,
+      });
+      const response = await request;
+      onPostCreate(response.data.data!);
+      onClose();
+    } catch (error: any) {
+      console.error("Error editing post:", error);
+      if (error.response) {
+        // server responded with a status code that falls out of the range of 2xx
+        setError(error.response.data.message);
+      } else if (error.request) {
+        // request was made but no response received
+        setError("No response from the server. Please try again later.");
+      } else {
+        // something else happened
+        setError("Something went wrong. Please try again later.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,34 +68,11 @@ const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
 
   // Generate preview URL when photo is selected
   useEffect(() => {
-    console.log("PostForm mounted");
-    if (!formData.photo) {
-      setPreview(null);
-      return;
+    if (formData.photo) {
+      const objectUrl = URL.createObjectURL(formData.photo);
+      setPreview(objectUrl);
     }
-
-    const objectUrl = URL.createObjectURL(formData.photo);
-    setPreview(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl); // Cleanup
   }, [formData.photo]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const postUrl = formData.photo ? await uploadImage(formData.photo) : "";
-      const { photo, ...formDatawithoutPhoto } = formData;
-      await postService.createPost({ ...formDatawithoutPhoto, postUrl });
-      window.location.reload();
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md w-2xl mx-auto">

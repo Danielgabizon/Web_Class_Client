@@ -1,37 +1,59 @@
-import api from "./authApi";
-import {
-  createPostResponse,
-  Post,
-  getAllPostsResponse,
-} from "../types/postTypes";
+import api from "../utilities/api";
+import { Post } from "../types/postTypes";
+import { ApiResponse } from "../types/apiType"; // Import the generic type
 
-const createPost = async (post: Post) => {
-  const response = await api.post<createPostResponse>("/posts", post);
-  return response.data;
-};
-
-const getAllPosts = async (sender?: string): Promise<getAllPostsResponse> => {
-  let response;
-  if (sender) {
-    response = await api.get<getAllPostsResponse>("/posts?sender=" + sender);
-  } else {
-    response = await api.get<getAllPostsResponse>("/posts");
+class PostService {
+  createPost(post: Post) {
+    const controller = new AbortController();
+    const request = api.post<ApiResponse<Post>>("/posts", post, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
   }
-  return response.data;
-};
 
-const updatePost = async (id: string, post: Post) => {
-  const response = await api.put<createPostResponse>(`/posts/${id}`, post);
-  return response.data;
-};
+  getPost(id: string) {
+    const controller = new AbortController();
+    const request = api.get<ApiResponse<Post>>(`/posts/${id}`, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
+  }
 
-const deletePost = async (id: string) => {
-  const response = await api.delete(`/posts/${id}`);
-  return response.data;
-};
-// const getPost = async (id) => {
-//   const response = await api.get(`/posts/${id}`);
-//   return response.data;
-// };
+  // get all posts (optionally filtered by sender)
+  getAllPosts(sender_id?: string) {
+    const controller = new AbortController();
+    const request = api.get<ApiResponse<Post[]>>(
+      sender_id ? `/posts?sender=${sender_id}` : "/posts",
+      {
+        signal: controller.signal,
+      }
+    );
+    return { request, cancel: () => controller.abort() };
+  }
 
-export default { createPost, getAllPosts, updatePost, deletePost };
+  updatePost(id: string, post: Post) {
+    const controller = new AbortController();
+    const request = api.put<ApiResponse<Post>>(`/posts/${id}`, post, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
+  }
+
+  deletePost(id: string) {
+    const controller = new AbortController();
+    const request = api.delete<ApiResponse<null>>(`/posts/${id}`, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
+  }
+  toggleLike(id: string) {
+    const controller = new AbortController();
+    const request = api.post<ApiResponse<Post>>(`/posts/like/${id}`, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
+  }
+}
+
+const postService = new PostService();
+export default postService;

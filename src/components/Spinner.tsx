@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const Spinner = () => {
+const Spinner: React.FC = () => {
   console.log("Spinner render");
   useEffect(() => {
     console.log("Spinner mounted");

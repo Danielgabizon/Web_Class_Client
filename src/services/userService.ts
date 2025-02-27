@@ -1,18 +1,26 @@
-import api from "./authApi";
-import { AllUserResponse, UserResponse } from "../types/userTypes";
+import api from "../utilities/api";
+import { User } from "../types/userTypes";
+import { ApiResponse } from "../types/apiType"; // Import the generic type
 
-const getAllUsers = async (username?: string) => {
-  let response;
-  if (username) {
-    response = await api.get<AllUserResponse>(`/users?username=${username}`);
-  } else {
-    response = await api.get<AllUserResponse>("/users");
+class UserService {
+  getAllUsers(username?: string) {
+    const controller = new AbortController();
+    const request = api.get<ApiResponse<User[]>>(
+      username ? `/users?username=${username}` : "/users",
+      {
+        signal: controller.signal,
+      }
+    );
+
+    return { request, cancel: () => controller.abort() };
   }
-  return response.data;
-};
-const getUserById = async (id: string) => {
-  const response = await api.get<UserResponse>(`/users/${id}`);
-  return response.data;
-};
-
-export default { getUserById, getAllUsers };
+  getUser(id: string) {
+    const controller = new AbortController();
+    const request = api.get<ApiResponse<User>>(`/users/${id}`, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
+  }
+}
+const userService = new UserService();
+export default userService;

@@ -4,7 +4,7 @@ import useAuth from "../hooks/useAuth";
 import Spinner from "./Spinner";
 import uploadImage from "../utilities/uploadImage";
 
-const RegisterForm = () => {
+const RegisterForm: React.FC = () => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -13,13 +13,34 @@ const RegisterForm = () => {
     lname: "",
     photo: null as File | null,
   });
-  console.log("registeform render");
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const profileUrl = formData.photo
+        ? await uploadImage(formData.photo)
+        : "";
+      // Exclude photo (which is of type file) and include profileUrl (string) instead
+      const { photo, ...formDatawithoutPhoto } = formData;
+
+      await register({ ...formDatawithoutPhoto, profileUrl });
+
+      navigate("/login");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -34,41 +55,14 @@ const RegisterForm = () => {
 
   // Generate preview URL when photo is selected
   useEffect(() => {
-    if (!formData.photo) {
-      setPreview(null);
-      return;
+    if (formData.photo) {
+      const objectUrl = URL.createObjectURL(formData.photo);
+      setPreview(objectUrl);
     }
-
-    const objectUrl = URL.createObjectURL(formData.photo);
-    setPreview(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl); // Cleanup
   }, [formData.photo]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const profileUrl = formData.photo
-        ? await uploadImage(formData.photo)
-        : "";
-      // Exclude photo (which is of type file) and include profileUrl (string) instead
-      const { photo, ...formDatawithoutPhoto } = formData;
-      await register({ ...formDatawithoutPhoto, profileUrl });
-
-      console.log("Registered successfully");
-      navigate("/login");
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md w-150">
+    <div className="bg-white p-4 rounded-lg shadow-md max-w-2xl w-full ">
       <h2 className="text-xl font-semibold text-center mb-4">Sign up</h2>
 
       {error && (

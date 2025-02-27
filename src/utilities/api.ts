@@ -1,5 +1,5 @@
 import axios from "axios";
-import authService from "./authService";
+import authService from "../services/authService";
 
 const api = axios.create({
   baseURL: "http://localhost:3000",
@@ -36,8 +36,9 @@ api.interceptors.response.use(
     if (error.response?.status === 403 && !originalRequest._retry) {
       originalRequest._retry = true; // Prevent infinite loops
       try {
-        const response = await authService.refresh();
-        const { refreshToken, accessToken } = response.data!;
+        const { request } = authService.refresh();
+        const response = await request;
+        const { refreshToken, accessToken } = response.data.data!;
 
         localStorage.setItem(
           "tokens",

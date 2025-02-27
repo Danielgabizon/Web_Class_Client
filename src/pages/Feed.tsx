@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PostList from "../components/PostList";
 import postService from "../services/postService";
 import { Post } from "../types/postTypes";
@@ -11,128 +11,184 @@ import userService from "../services/userService";
 const Feed: React.FC = () => {
   console.log("Feed render");
 
-  // Posts State
-  const [filter, setFilter] = useState<string>("");
-  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
 
-  // Create Post Modal State
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const openCreateModal = () => setIsCreateModalOpen(true);
-  const closeCreateModal = () => setIsCreateModalOpen(false);
+  // Posts State
+  const [filter, setFilter] = useState<string>(""); // Filter by username
+  const [posts, setPosts] = useState<Post[]>([]);
 
-  // Edit Post Modal State
-  const [editingPost, setEditingPost] = useState<Post | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const openEditModal = (post: Post) => {
-    setIsEditModalOpen(true);
-    setEditingPost(post);
-  };
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setEditingPost(null);
+  //  handle post creation
+  const handlePostCreate = (newPost: Post) => {
+    setPosts((prevPosts) => [...prevPosts, newPost]);
   };
 
-  // Delete Post Modal State
-  const [deletingPost, setDeletingPost] = useState<Post | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  const openDeleteModal = (post: Post) => {
-    setIsDeleteModalOpen(true);
-    setDeletingPost(post);
+  const handlePostUpdate = (updatedPost: Post) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post._id === updatedPost._id ? updatedPost : post
+      )
+    );
+  };
+  const handlePostDelete = (deletedPostId: string) => {
+    setPosts((prevPosts) =>
+      prevPosts.filter((post) => post._id !== deletedPostId)
+    );
   };
 
-  const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setDeletingPost(null);
+  // Modal State
+  const [modalType, setModalType] = useState<
+    "create" | "edit" | "delete" | null
+  >(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
+  // Open modal function
+  const openModal = (type: "create" | "edit" | "delete", post?: Post) => {
+    setModalType(type);
+    setSelectedPost(post || null); // if type is create, post should be null
+  };
+
+  // Close modal function
+  const closeModal = () => {
+    setModalType(null);
+    setSelectedPost(null);
   };
 
   // Fetch Posts
   useEffect(() => {
+    console.log("Feed mounted");
+    let cancelUserRequest: () => void;
+    let cancelPostRequest: () => void;
+
     const fetchPosts = async () => {
       try {
         setLoading(true);
+
         if (filter) {
-          // if filter is not empty, fetch posts by username
-          const response = await userService.getAllUsers(filter);
-          if (response.data!.length == 0) {
-            // if no user found, set posts to empty array
+          // fetch user by filter (username)
+          const { request: userRequest, cancel: cancelUser } =
+            userService.getAllUsers(filter);
+          cancelUserRequest = cancelUser; // store the cancel function
+
+          const userResponse = await userRequest;
+
+          if (userResponse.data.data!.length === 0) {
+            // No user found, set posts to empty array
             setPosts([]);
-            setLoading(false);
-            return;
+          } else {
+            // user found, fetch posts by user ID
+            const userId = userResponse.data.data![0]._id;
+
+            const { request: postRequest, cancel: cancelPost } =
+              postService.getAllPosts(userId);
+            cancelPostRequest = cancelPost;
+
+            const postResponse = await postRequest;
+
+            setPosts(postResponse.data.data!);
           }
-          // User is found so fetch posts by user id
-          const response2 = await postService.getAllPosts(
-            response.data![0]._id
-          );
-          setPosts(response2.data!);
-          setLoading(false);
-          return;
         } else {
-          // if filter is empty, fetch all posts
-          const response = await postService.getAllPosts();
-          setPosts(response.data!);
-          setLoading(false);
+          // No filter, fetch all posts
+          const { request: postRequest, cancel: cancelPost } =
+            postService.getAllPosts();
+          cancelPostRequest = cancelPost; // Store the cancel function
+
+          const postResponse = await postRequest;
+
+          setPosts(postResponse.data.data!);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching posts:", error);
+        if (error.response) {
+          // server responded with a status code that falls out of the range of 2xx
+          setError(error.response.data.message);
+        } else if (error.request) {
+          // request was made but no response received
+          setError("No response from the server. Please try again later.");
+        } else {
+          setError("Something went wrong. Please try again later.");
+        }
+      } finally {
         setLoading(false);
       }
     };
 
-    console.log("Feed mounted");
     fetchPosts();
+
+    // Cleanup function to abort requests if the component unmounts or filter changes
+    return () => {
+      // Abort the user request if it exists
+      if (cancelUserRequest) cancelUserRequest();
+
+      // Abort the post request if it exists
+      if (cancelPostRequest) cancelPostRequest();
+    };
   }, [filter]);
 
   return (
-    <div className="flex flex-col items-center space-y-4 max-w-2xl mx-auto">
-      {/* Create Post Button and Filter */}
-      <div className="w-full justify-between flex space-x-4 mt-4">
-        <input
-          type="text"
-          placeholder="Filter posts by username"
-          className=" px-4 py-2 bg-[#F5F6F7] border border-gray-300 rounded-lg text-center "
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
-        <button
-          onClick={openCreateModal}
-          className="px-4 py-2 bg-[#F5F6F7] border border-gray-300 rounded-lg cursor-pointer text-center"
-        >
-          Create a new post
-        </button>
+    <div className="flex justify-center bg-gray-100 min-h-screen">
+      <div className="flex flex-col max-w-3xl w-full p-4 space-y-4">
+        {/* Error Message */}
+        {error && (
+          <div className="text-center p-4 text-red-500 bg-red-100 border border-red-200 rounded-lg">
+            {error}
+          </div>
+        )}
+        {/* Create Post Button and Filter */}
+        <div className="flex justify-between">
+          <input
+            type="text"
+            placeholder="Filter by username"
+            className="px-4 py-2 bg-gray-200 border border-gray-300 rounded-lg"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+          <button
+            onClick={() => openModal("create")}
+            className="px-4 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-pointer text-center"
+          >
+            Create a new post
+          </button>
+        </div>
+        {loading ? (
+          <div className="flex justify-center items-center mt-8">
+            <Spinner />
+          </div>
+        ) : (
+          <>
+            {/* Post List */}
+            <PostList
+              posts={posts}
+              onEdit={(post) => openModal("edit", post)}
+              onDelete={(post) => openModal("delete", post)}
+            />
+          </>
+        )}
       </div>
 
-      {/* Post List */}
-      {loading ? (
-        <Spinner />
-      ) : (
-        <PostList
-          posts={posts}
-          onEdit={openEditModal}
-          onDelete={openDeleteModal}
-        />
-      )}
-
-      {/* Create Post Modal */}
-      {isCreateModalOpen && (
+      {/* Modal Rendering */}
+      {modalType && (
         <Modal>
-          <PostCreateForm onClose={closeCreateModal} />
-        </Modal>
-      )}
-
-      {/* Edit Post Modal */}
-      {isEditModalOpen && (
-        <Modal>
-          <PostEditForm post={editingPost!} onClose={closeEditModal} />
-        </Modal>
-      )}
-
-      {/* Delete Post Modal */}
-      {isDeleteModalOpen && (
-        <Modal>
-          <PostDeleteForm post={deletingPost!} onClose={closeDeleteModal} />
+          {modalType === "create" && (
+            <PostCreateForm
+              onClose={closeModal}
+              onPostCreate={handlePostCreate}
+            />
+          )}
+          {modalType === "edit" && (
+            <PostEditForm
+              post={selectedPost!}
+              onClose={closeModal}
+              onPostEdit={handlePostUpdate}
+            />
+          )}
+          {modalType === "delete" && (
+            <PostDeleteForm
+              post={selectedPost!}
+              onClose={closeModal}
+              onPostDelete={handlePostDelete}
+            />
+          )}
         </Modal>
       )}
     </div>
