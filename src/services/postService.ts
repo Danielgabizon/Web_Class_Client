@@ -48,7 +48,7 @@ class PostService {
   }
   toggleLike(id: string) {
     const controller = new AbortController();
-    const request = api.post<ApiResponse<Post>>(`/posts/like/${id}`, {
+    const request = api.put<ApiResponse<Post>>(`/posts/like/${id}`, {
       signal: controller.signal,
     });
     return { request, cancel: () => controller.abort() };

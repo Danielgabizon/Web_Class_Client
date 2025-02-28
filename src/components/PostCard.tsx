@@ -9,6 +9,7 @@ type PostCardProps = {
   post: Post;
   onEdit: (post: Post) => void;
   onDelete: (post: Post) => void;
+  showLikeBtn?: boolean;
   showCommentBtn?: boolean;
 };
 
@@ -17,13 +18,16 @@ const PostCard: React.FC<PostCardProps> = ({
   onEdit,
   onDelete,
   showCommentBtn = true,
+  showLikeBtn = true,
 }) => {
   console.log("PostCard render");
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>("");
 
-  // user details
+  const { user } = useAuth();
+
+  const [likelist, setLikelist] = useState<string[]>(post.likes!);
+
+  /* sender details */
+
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
   const [userDetailsError, setUserDetailsError] = useState("");
   const [senderDetails, setSenderDetails] = useState<{
@@ -33,7 +37,7 @@ const PostCard: React.FC<PostCardProps> = ({
     username: "Loading...",
     profilePic: "/defaultUserIcon.png",
   });
-  const [likeList, setLikelist] = useState<string[]>(post.likes!);
+
   useEffect(() => {
     console.log("PostCard useeffect");
     let cancelRequest: () => void;
@@ -75,8 +79,14 @@ const PostCard: React.FC<PostCardProps> = ({
   const toggleLike = async () => {
     try {
       const { request } = postService.toggleLike(post._id!);
-      const response = await request;
-      setLikelist(response.data.data!.likes!);
+      await request;
+      if (likelist.includes(user!.id!)) {
+        // Remove user ID from likelist
+        setLikelist((prev) => prev.filter((id) => id !== user!.id!));
+      } else {
+        // Add user ID to likelist
+        setLikelist([...likelist, user!.id!]);
+      }
     } catch (error: any) {
       console.error("Error toggling like", error);
     }
@@ -129,11 +139,23 @@ const PostCard: React.FC<PostCardProps> = ({
               )}
             </Link>
           </div>
-
+          <p className="text-gray-500 text-sm">
+            {likelist.length === 1
+              ? "1 person liked this post"
+              : likelist.length > 1
+              ? `${likelist.length} people liked this post`
+              : ""}
+          </p>
           <div className="flex mt-4 space-x-4">
-            <button className="bg-[#4267B2] text-white p-2 rounded-md">
-              Like
-            </button>
+            {showLikeBtn && (
+              <button
+                className="bg-[#4267B2] text-white p-2 rounded-md cursor-pointer"
+                onClick={toggleLike}
+              >
+                {likelist.includes(user!.id!) ? "Unlike" : "Like"}
+              </button>
+            )}
+
             {showCommentBtn && (
               <Link to={`/post/${post._id}`}>
                 <button className="bg-[#4267B2] text-white p-2 rounded-md cursor-pointer">

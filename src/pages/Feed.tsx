@@ -135,7 +135,7 @@ const Feed: React.FC = () => {
           </div>
         )}
         {/* Create Post Button and Filter */}
-        <div className="flex justify-between">
+        <div className="flex justify-between space-x-4">
           <input
             type="text"
             placeholder="Filter by username"

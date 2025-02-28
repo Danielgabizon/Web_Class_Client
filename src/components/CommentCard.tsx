@@ -8,9 +8,15 @@ import { IoSend } from "react-icons/io5";
 
 type CommentCardProps = {
   comment: Comment;
+  onCommentEdit: (editedComment: Comment) => void;
+  onCommentDelete: (deletedCommentId: string) => void;
 };
-const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
-  console.log("CommentCard");
+const CommentCard: React.FC<CommentCardProps> = ({
+  comment,
+  onCommentEdit,
+  onCommentDelete,
+}) => {
+  console.log("CommentCard render");
   const { user } = useAuth();
 
   const [error, setError] = useState("");
@@ -70,7 +76,7 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
     try {
       const { request } = commentService.deleteComment(comment._id!);
       await request;
-      window.location.reload();
+      onCommentDelete(comment._id!);
     } catch (error: any) {
       console.error("Error deleting comment", error);
       if (error.response) {
@@ -93,8 +99,9 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment }) => {
       const { request } = commentService.updateComment(comment._id!, {
         content: editContent,
       });
-      await request;
-      window.location.reload();
+      const response = await request;
+      onCommentEdit(response.data.data!);
+      setShowEdit(false);
     } catch (error: any) {
       console.error("Error editing comment", error);
       if (error.response) {

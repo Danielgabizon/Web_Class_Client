@@ -27,14 +27,14 @@ class CommentService {
   }
   deleteComment(id: string) {
     const controller = new AbortController();
-    const request = api.delete(`/comments/${id}`, {
+    const request = api.delete<ApiResponse<null>>(`/comments/${id}`, {
       signal: controller.signal,
     });
     return { request, cancel: () => controller.abort() };
   }
   updateComment(id: string, comment: Comment) {
     const controller = new AbortController();
-    const request = api.put(`/comments/${id}`, comment, {
+    const request = api.put<ApiResponse<Comment>>(`/comments/${id}`, comment, {
       signal: controller.signal,
     });
     return { request, cancel: () => controller.abort() };

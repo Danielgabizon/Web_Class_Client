@@ -3,11 +3,17 @@ import { useState } from "react";
 import useAuth from "../hooks/useAuth";
 import { IoSend } from "react-icons/io5"; // Install with: npm install react-icons
 import Spinner from "./Spinner";
+import { Comment } from "../types/commentTypes";
 type CommentCreateFormProps = {
+  onCommentCreate: (newComment: Comment) => void;
   postId: string;
 };
 
-const CommentCreateForm: React.FC<CommentCreateFormProps> = ({ postId }) => {
+const CommentCreateForm: React.FC<CommentCreateFormProps> = ({
+  postId,
+  onCommentCreate,
+}) => {
+  console.log("CommentCreateForm rendered");
   const { userPic } = useAuth().user!;
   const [formData, setFormData] = useState({
     content: "",
@@ -22,8 +28,9 @@ const CommentCreateForm: React.FC<CommentCreateFormProps> = ({ postId }) => {
     try {
       const { content } = formData;
       const { request } = commentService.createComment({ content }, postId);
-      await request;
-      window.location.reload();
+      const response = await request;
+      onCommentCreate(response.data.data!);
+      setFormData({ content: "" });
     } catch (error: any) {
       console.error("Error creating comment:", error);
       if (error.response) {

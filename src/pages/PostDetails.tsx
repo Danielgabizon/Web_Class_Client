@@ -14,37 +14,29 @@ import CommentCreateForm from "../components/CommentCreateForm";
 
 import Spinner from "../components/Spinner";
 import Modal from "../components/Modal";
+import { useNavigate } from "react-router-dom";
 
 const PostDetails = () => {
-  /* Modal */
+  console.log("PostDetails rendered");
 
-  // Modal States
-  const [modalType, setModalType] = useState<"edit" | "delete" | null>(null);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-
-  // Open modal function
-  const openModal = (type: "edit" | "delete", post: Post) => {
-    setModalType(type);
-    setSelectedPost(post);
-  };
-
-  // Close modal function
-  const closeModal = () => {
-    setModalType(null);
-    setSelectedPost(null);
-  };
+  const navigate = useNavigate();
 
   /* Post */
-
-  // Post States
   const { postId } = useParams<{ postId: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [loadingPost, setLoadingPost] = useState(false);
   const [postError, setPostError] = useState<string>("");
 
+  const handlePostEdit = (editedPost: Post) => {
+    setPost(editedPost);
+  };
+  const handlePostDelete = () => {
+    navigate("/");
+  };
+
   // Fetch Post Details
   useEffect(() => {
-    console.log("PostDetails useEffect1");
+    console.log("Post fetch useffect");
     let cancelRequest: () => void;
     const fetchPostDetails = async () => {
       try {
@@ -79,9 +71,26 @@ const PostDetails = () => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
 
+  const handleCommentCreate = (newComment: Comment) => {
+    setComments((prevComments) => [newComment, ...prevComments]);
+  };
+
+  const handleCommentEdit = (editedComment: Comment) => {
+    setComments((prevComments) =>
+      prevComments.map((comment) =>
+        comment._id === editedComment._id ? editedComment : comment
+      )
+    );
+  };
+  const handleCommentDelete = (deletedCommentId: string) => {
+    setComments((prevComments) =>
+      prevComments.filter((comment) => comment._id !== deletedCommentId)
+    );
+  };
+
   //Fetch Comments
   useEffect(() => {
-    console.log("PostDetails useEffect2");
+    console.log("Comments fetch useffect");
     let cancelRequest: () => void;
     const fetchComments = async () => {
       try {
@@ -99,6 +108,24 @@ const PostDetails = () => {
     if (postId) fetchComments();
     return () => cancelRequest && cancelRequest();
   }, [postId]);
+
+  /* Modal */
+
+  // Modal States
+  const [modalType, setModalType] = useState<"edit" | "delete" | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
+  // Open modal function
+  const openModal = (type: "edit" | "delete", post: Post) => {
+    setModalType(type);
+    setSelectedPost(post);
+  };
+
+  // Close modal function
+  const closeModal = () => {
+    setModalType(null);
+    setSelectedPost(null);
+  };
 
   return (
     <div className="flex justify-center bg-gray-100 min-h-screen">
@@ -128,10 +155,23 @@ const PostDetails = () => {
             )}
 
             {/* Comment Form */}
-            {postId && <CommentCreateForm postId={postId} />}
+            {postId && (
+              <CommentCreateForm
+                postId={postId}
+                onCommentCreate={handleCommentCreate}
+              />
+            )}
 
             {/* Comment List */}
-            <CommentList comments={comments} />
+            <h2 className="text-lg font-semibold">
+              {`Comments (${comments.length})`}
+            </h2>
+
+            <CommentList
+              comments={comments}
+              onCommentEdit={handleCommentEdit}
+              onCommentDelete={handleCommentDelete}
+            />
           </>
         )}
 
@@ -139,10 +179,18 @@ const PostDetails = () => {
         {modalType && (
           <Modal>
             {modalType === "edit" && (
-              <PostEditForm post={selectedPost!} onClose={closeModal} />
+              <PostEditForm
+                post={selectedPost!}
+                onClose={closeModal}
+                onPostEdit={handlePostEdit}
+              />
             )}
             {modalType === "delete" && (
-              <PostDeleteForm post={selectedPost!} onClose={closeModal} />
+              <PostDeleteForm
+                post={selectedPost!}
+                onClose={closeModal}
+                onPostDelete={handlePostDelete}
+              />
             )}
           </Modal>
         )}
