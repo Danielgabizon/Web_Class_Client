@@ -103,14 +103,16 @@ const PostCard: React.FC<PostCardProps> = ({
       ) : (
         <>
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <img
-                src={senderDetails.profilePic}
-                alt="user"
-                className="h-10 w-10 rounded-full"
-              />
-              <h2 className="font-semibold">{senderDetails.username}</h2>
-            </div>
+            <Link to={`/profile/${post.sender}`}>
+              <div className="flex items-center space-x-4">
+                <img
+                  src={senderDetails.profilePic}
+                  alt="user"
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+                <h2 className="font-semibold">{senderDetails.username}</h2>
+              </div>
+            </Link>
             {user?.id === post.sender && (
               <div className="flex space-x-4">
                 <img
@@ -134,7 +136,7 @@ const PostCard: React.FC<PostCardProps> = ({
                 <img
                   src={post.postUrl}
                   alt="post"
-                  className="w-full h-150 object-cover mt-4 rounded-md"
+                  className="w-full h-200 object-cover mt-4 rounded-md"
                 />
               )}
             </Link>

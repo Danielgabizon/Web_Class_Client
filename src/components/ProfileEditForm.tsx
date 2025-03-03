@@ -1,49 +1,51 @@
 import { useState, useEffect } from "react";
-//import { useNavigate, Link } from "react-router-dom";
+import { User } from "../types/userTypes";
+import userService from "../services/userService";
 import Spinner from "./Spinner";
 import uploadImage from "../utilities/uploadImage";
-import postService from "../services/postService";
-import { Post } from "../types/postTypes";
-import generatePrompt from "../utilities/generatePromopt";
-import { IoIosHelp } from "react-icons/io";
-
-type PostCreateFormProps = {
-  onPostCreate: (newPost: Post) => void;
+type ProfileEditFormProps = {
+  userDetails: User;
   onClose: () => void;
+  onProfileEdit: (updatedUser: User) => void;
 };
-const PostCreateForm: React.FC<PostCreateFormProps> = ({
-  onPostCreate,
+const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
+  userDetails,
   onClose,
+  onProfileEdit,
 }) => {
-  console.log("PostCreateForm render");
   const [formData, setFormData] = useState({
-    title: "",
-    content: "",
-    photo: null as File | null,
+    username: userDetails.username,
+    email: userDetails.email,
+    fname: userDetails.fname,
+    lname: userDetails.lname,
+    profilePic: null as null | File,
   });
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(
+    userDetails.profileUrl || null
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingPrompt, setLoadingPrompt] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
-      const postUrl = formData.photo ? await uploadImage(formData.photo) : "";
-      const { photo, ...formDatawithoutPhoto } = formData;
+      let profileUrl = userDetails.profileUrl; // Keep the old image if no new one is uploaded
+      if (formData.profilePic) {
+        profileUrl = await uploadImage(formData.profilePic);
+      }
 
-      const { request } = postService.createPost({
+      const { profilePic, ...formDatawithoutPhoto } = formData;
+      const { request } = userService.updateUser(userDetails._id!, {
         ...formDatawithoutPhoto,
-        postUrl,
+        profileUrl: profileUrl,
       });
       const response = await request;
-      onPostCreate(response.data.data!);
+      onProfileEdit(response.data.data!);
       onClose();
     } catch (error: any) {
-      console.error("Error editing post:", error);
+      console.error("Error editing profile:", error);
       if (error.response) {
         // server responded with a status code that falls out of the range of 2xx
         setError(error.response.data.message);
@@ -59,9 +61,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -69,80 +69,63 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    setFormData((prev) => ({ ...prev, photo: file }));
-  };
-
-  const handleHelp = async () => {
-    const prompt =
-      "I need your help writing me a short post content for this title: " +
-      formData.title +
-      "Please make it short. i need only the paragraph. dont add your own text or any options";
-    try {
-      setError("");
-      setLoadingPrompt(true);
-      setFormData((prev) => ({ ...prev, content: "" }));
-      if (!formData.title) {
-        throw new Error(
-          "Before using our AI tool for generating content, please provide a title first"
-        );
-      }
-      const response = await generatePrompt(prompt);
-      setFormData((prev) => ({ ...prev, content: response! }));
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setLoadingPrompt(false);
-    }
+    setFormData((prev) => ({ ...prev, profilePic: file }));
   };
 
   // Generate preview URL when photo is selected
   useEffect(() => {
-    if (formData.photo) {
-      const objectUrl = URL.createObjectURL(formData.photo);
+    if (formData.profilePic) {
+      const objectUrl = URL.createObjectURL(formData.profilePic);
       setPreview(objectUrl);
     }
-  }, [formData.photo]);
+  }, [formData.profilePic]);
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md w-2xl mx-auto">
-      <h2 className="text-xl font-semibold text-center mb-4">New Post</h2>
+    <div className="bg-white p-4 rounded-lg shadow-md w-2xl">
+      <h2 className="text-xl font-semibold text-center mb-4">Edit Profile</h2>
       {error && (
         <p className="text-red-500 text-center text-sm mb-4">{error}</p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          name="title"
-          placeholder="Post's Title"
-          value={formData.title}
+          name="username"
+          placeholder="Username"
+          value={formData.username}
           onChange={handleChange}
           required
           className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
         />
-        <div className="relative">
-          <textarea
-            name="content"
-            placeholder="Post's Content"
-            value={formData.content}
-            onChange={handleChange}
-            required
-            className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2] resize-none overflow-auto focus:outline-none"
-          />
-          {loadingPrompt ? (
-            <span className="absolute top-3 right-3">
-              <Spinner />
-            </span>
-          ) : (
-            !formData.content && (
-              <span className="absolute top-0 right-0 text-gray-400">
-                <IoIosHelp size={50} onClick={handleHelp} />
-              </span>
-            )
-          )}
-        </div>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
+        />
+        <input
+          type="text"
+          name="fname"
+          placeholder="First Name"
+          value={formData.fname}
+          onChange={handleChange}
+          required
+          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
+        />
+        <input
+          type="text"
+          name="lname"
+          placeholder="Last Name"
+          value={formData.lname}
+          onChange={handleChange}
+          required
+          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
+        />
 
         <div className="flex items-center justify-between space-x-4">
-          <label className="text-gray-600 p-3">Photo</label>
+          <label className="text-gray-600 w-1/4">Photo</label>
 
           <div className="flex items-center space-x-4">
             {/* hidden Input */}
@@ -162,7 +145,9 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
             </label>
 
             <span className="text-gray-600">
-              {formData.photo ? formData.photo.name : "No file chosen"}
+              {formData.profilePic
+                ? formData.profilePic.name
+                : "No file chosen"}
             </span>
           </div>
         </div>
@@ -176,7 +161,6 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
             />
           </div>
         )}
-
         {/* Submit Button */}
         {loading ? (
           <div className="flex justify-center">
@@ -195,7 +179,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
               type="submit"
               className="w-40 bg-[#1877F2] text-white py-2 rounded-lg font-bold hover:bg-[#165DB6] transition"
             >
-              Share
+              Edit
             </button>
           </div>
         )}
@@ -203,5 +187,4 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     </div>
   );
 };
-
-export default PostCreateForm;
+export default ProfileEditForm;

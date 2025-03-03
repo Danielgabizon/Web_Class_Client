@@ -14,7 +14,7 @@ const CommentCreateForm: React.FC<CommentCreateFormProps> = ({
   onCommentCreate,
 }) => {
   console.log("CommentCreateForm rendered");
-  const { userPic } = useAuth().user!;
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     content: "",
   });
@@ -56,7 +56,11 @@ const CommentCreateForm: React.FC<CommentCreateFormProps> = ({
   return (
     <div className="bg-white p-4 rounded-lg shadow-md w-full">
       <div className="flex items-center space-x-2 ">
-        <img src={userPic} alt="user" className="w-8 h-8 rounded-full" />
+        <img
+          src={user!.profileUrl}
+          alt="user"
+          className="w-8 h-8 rounded-full object-cover"
+        />
         <div className="flex flex-col w-full space-y-2 relative">
           {error && <p className="text-red-500 text-xs">{error}</p>}
           <form onSubmit={handleSubmit}>

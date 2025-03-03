@@ -2,7 +2,6 @@ import React from "react";
 import { Post } from "../types/postTypes";
 import postService from "../services/postService";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Spinner from "./Spinner";
 type PostDeleteFormProps = {
   post: Post;
@@ -22,7 +21,7 @@ const PostDeleteForm: React.FC<PostDeleteFormProps> = ({
     setError("");
     try {
       const { request } = postService.deletePost(post._id!);
-      const response = await request;
+      await request;
       onPostDelete(post._id!);
       onClose();
     } catch (error: any) {

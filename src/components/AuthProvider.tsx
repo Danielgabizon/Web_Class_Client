@@ -49,19 +49,20 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const { request } = authService.login(credentials);
       const response = await request;
-      const { accessToken, refreshToken, _id, username, userPic } =
+      const { accessToken, refreshToken, _id, username, profileUrl } =
         response.data.data!;
+      console.log("Login successful:", response.data.data!);
       localStorage.setItem(
         "tokens",
         JSON.stringify({ accessToken, refreshToken })
       );
       localStorage.setItem(
         "user",
-        JSON.stringify({ id: _id, username, userPic })
+        JSON.stringify({ id: _id, username, profileUrl: profileUrl })
       );
 
       setTokens({ accessToken, refreshToken });
-      setUser({ id: _id, username, userPic });
+      setUser({ id: _id, username, profileUrl });
     } catch (error: any) {
       console.error("Login failed:", error);
       if (error.response) {
@@ -93,7 +94,9 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <authContext.Provider value={{ user, tokens, register, login, logout }}>
+    <authContext.Provider
+      value={{ user, setUser, tokens, register, login, logout }}
+    >
       {children}
     </authContext.Provider>
   );

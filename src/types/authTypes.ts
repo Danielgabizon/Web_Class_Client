@@ -21,7 +21,7 @@ export interface RegisterResponse {
 export interface LoggedUser {
   id: string;
   username: string;
-  userPic: string;
+  profileUrl: string;
 }
 
 export interface Tokens {
@@ -34,11 +34,12 @@ export interface AuthResponse {
   refreshToken: string;
   _id: string;
   username: string;
-  userPic: string;
+  profileUrl: string;
 }
 
 export interface AuthContextType {
   user: LoggedUser | null;
+  setUser: React.Dispatch<React.SetStateAction<LoggedUser | null>>;
   tokens: Tokens | null;
   login: (credentials: Credentials) => Promise<void>;
   logout: () => Promise<void>;

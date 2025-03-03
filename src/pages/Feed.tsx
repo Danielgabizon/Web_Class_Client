@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import PostList from "../components/PostList";
 import postService from "../services/postService";
 import { Post } from "../types/postTypes";

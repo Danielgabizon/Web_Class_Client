@@ -130,7 +130,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
           <img
             src={senderDetails.profilePic}
             alt="Profile"
-            className="w-8 h-8 rounded-full"
+            className="w-8 h-8 rounded-full object-cover"
           />
           <div className="w-full flex flex-col space-y-2">
             <div className="flex items-center justify-between">
@@ -140,7 +140,11 @@ const CommentCard: React.FC<CommentCardProps> = ({
                   <img
                     src="/editPostIcon.png"
                     className="w-4 h-4 opacity-60 cursor-pointer"
-                    onClick={() => setShowEdit(!showEdit)}
+                    onClick={() => {
+                      setShowEdit(!showEdit);
+                      setEditContent(comment.content);
+                      setError("");
+                    }}
                   />
                   <img
                     src="/deletePostIcon.png"

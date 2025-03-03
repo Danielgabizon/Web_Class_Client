@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { MdEmail } from "react-icons/md";
-
+import { MdEmail, MdPerson, MdSettings } from "react-icons/md";
 import { User } from "../types/userTypes";
 import { Post } from "../types/postTypes";
 import useAuth from "../hooks/useAuth";
@@ -11,10 +10,10 @@ import PostList from "../components/PostList";
 import PostEditForm from "../components/PostEditForm";
 import PostDeleteForm from "../components/PostDeleteForm";
 import Modal from "../components/Modal";
-
+import ProfileEditForm from "../components/ProfileEditForm";
 const Profile: React.FC = () => {
   console.log("Profile rendered");
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   /* User */
 
@@ -23,7 +22,7 @@ const Profile: React.FC = () => {
   const [userDetails, setUserDetails] = useState<User | null>(null);
 
   useEffect(() => {
-    console.log("Profile mounted");
+    console.log("Profile userdetails fetch useffect");
     let cancelRequest: () => void;
     const fetchProfile = async () => {
       try {
@@ -53,7 +52,37 @@ const Profile: React.FC = () => {
     return () => {
       if (cancelRequest) cancelRequest();
     };
-  }, [user]);
+  }, []);
+
+  const handleProfileEdit = (newUserDetails: User) => {
+    setUserDetails(newUserDetails);
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => ({
+        ...post,
+        username: newUserDetails.username,
+        profileUrl: newUserDetails.profileUrl,
+      }))
+    );
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        id: newUserDetails._id,
+        username: newUserDetails.username,
+        profileUrl: newUserDetails.profileUrl,
+      })
+    );
+    setUser(JSON.parse(localStorage.getItem("user")!));
+  };
+
+  /*Edit Profile Modal*/
+  const [editProfileModal, setEditProfileModal] = useState(false);
+
+  const profileOpenModal = () => {
+    setEditProfileModal(true);
+  };
+  const profileCloseModal = () => {
+    setEditProfileModal(false);
+  };
 
   /* Posts */
   const [postsLoading, setPostsLoading] = useState(false);
@@ -74,7 +103,7 @@ const Profile: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log("Posts fetch useffect");
+    console.log("Profile Posts fetch useffect");
     let cancelRequest: () => void;
     const fetchPosts = async () => {
       try {
@@ -105,86 +134,107 @@ const Profile: React.FC = () => {
     };
   }, []);
 
-  /* Modal */
-  const [modalType, setModalType] = useState<"edit" | "delete" | null>(null);
+  /* Post Modal */
+  const [postModalType, setModalType] = useState<"edit" | "delete" | null>(
+    null
+  );
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
-  // Open modal function
-  const openModal = (type: "edit" | "delete", post?: Post) => {
+  // Open close modal function
+  const postOpenModal = (type: "edit" | "delete", post?: Post) => {
     setModalType(type);
     setSelectedPost(post || null); // if type is create, post should be null
   };
 
-  // Close modal function
-  const closeModal = () => {
+  // Close post modal function
+  const postCloseModal = () => {
     setModalType(null);
     setSelectedPost(null);
   };
 
   return (
     <div className="flex justify-center bg-gray-100 min-h-screen">
-      <div className="flex max-w-5xl w-full items-start  p-4 space-x-4">
+      <div className="flex max-w-5xl w-full items-start  p-4 space-x-8">
         {/* User Section */}
         {userError && <p className="text-red-500">{userError}</p>}
 
-        {userLoading ? (
-          <Spinner />
+        {userLoading || postsLoading ? (
+          <div className="w-full flex self- mt-4">
+            <Spinner />
+          </div>
         ) : (
-          userDetails && (
-            <div className="space-y-4 w-1/4">
-              <img
-                src={userDetails.profileUrl}
-                alt={userDetails.username}
-                className="w-50 h-50 rounded-full"
-              />
-
-              <div className="flex items-center space-x-2">
-                <MdEmail className="text-gray-500" />
-                <p className="text-gray-500">{userDetails.email}</p>
+          <>
+            {userDetails && (
+              <div className="space-y-4 w-1/4">
+                <img
+                  src={userDetails.profileUrl}
+                  alt={userDetails.username}
+                  className="w-full h-72 rounded-sm object-cover"
+                />
+                <div className="flex items-center space-x-2">
+                  <MdPerson className="text-gray-500" />
+                  <p className="text-gray-500">{userDetails.username}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <MdEmail className="text-gray-500" />
+                  <p className="text-gray-500">{userDetails.email}</p>
+                </div>
               </div>
+            )}
+
+            {/* Post Section */}
+
+            <div className="space-y-2 w-3/4">
+              {userDetails && (
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold ">
+                    {userDetails.fname + " " + userDetails.lname}
+                  </h2>
+                  <button onClick={profileOpenModal}>
+                    <MdSettings size={24} />
+                  </button>
+                </div>
+              )}
+              {postError && <p className="text-red-500">{postError}</p>}
+              {posts && (
+                <PostList
+                  posts={posts}
+                  onEdit={(post) => postOpenModal("edit", post)}
+                  onDelete={(post) => postOpenModal("delete", post)}
+                />
+              )}
             </div>
-          )
+          </>
         )}
 
-        {/* Post Section */}
-
-        <div className="space-y-2 w-3/4">
-          {userDetails && (
-            <h2 className="text-2xl font-semibold ">
-              {userDetails.fname + " " + userDetails.lname}
-            </h2>
-          )}
-          {postError && <p className="text-red-500">{postError}</p>}
-          {postsLoading ? (
-            <Spinner />
-          ) : (
-            posts && (
-              <PostList
-                posts={posts}
-                onEdit={(post) => openModal("edit", post)}
-                onDelete={(post) => openModal("delete", post)}
-              />
-            )
-          )}
-        </div>
-
-        {/* Modal Rendering */}
-        {modalType && (
+        {/*Post Modal Rendering */}
+        {postModalType && (
           <Modal>
-            {modalType === "edit" && (
+            {postModalType === "edit" && (
               <PostEditForm
                 post={selectedPost!}
-                onClose={closeModal}
+                onClose={postCloseModal}
                 onPostEdit={handlePostUpdate}
               />
             )}
-            {modalType === "delete" && (
+            {postModalType === "delete" && (
               <PostDeleteForm
                 post={selectedPost!}
-                onClose={closeModal}
+                onClose={postCloseModal}
                 onPostDelete={handlePostDelete}
               />
             )}
+          </Modal>
+        )}
+
+        {/*Edit Profile Modal Rendering */}
+        {editProfileModal && (
+          <Modal>
+            <ProfileEditForm
+              userDetails={userDetails!}
+              onClose={profileCloseModal}
+              onProfileEdit={handleProfileEdit}
+            />
           </Modal>
         )}
       </div>

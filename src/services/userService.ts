@@ -21,6 +21,13 @@ class UserService {
     });
     return { request, cancel: () => controller.abort() };
   }
+  updateUser(id: string, data: User) {
+    const controller = new AbortController();
+    const request = api.put<ApiResponse<User>>(`/users/${id}`, data, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
+  }
 }
 const userService = new UserService();
 export default userService;
