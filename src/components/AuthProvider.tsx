@@ -7,6 +7,7 @@ import {
   RegisterRequest,
 } from "../types/authTypes.ts";
 import authContext from "../context/authContext.ts";
+import { CredentialResponse } from "@react-oauth/google";
 
 type AuthProviderProps = {
   children: React.ReactNode;
@@ -78,6 +79,39 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const googleLogin = async (googleCredentials: CredentialResponse) => {
+    try {
+      console.log(googleCredentials);
+      const { request } = authService.googleLogin(googleCredentials);
+      const response = await request;
+      const { accessToken, refreshToken, _id, username, profileUrl } =
+        response.data.data!;
+      localStorage.setItem(
+        "tokens",
+        JSON.stringify({ accessToken, refreshToken })
+      );
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ id: _id, username, profileUrl: profileUrl })
+      );
+
+      setTokens({ accessToken, refreshToken });
+      setUser({ id: _id, username, profileUrl });
+    } catch (error: any) {
+      console.error("Google login failed:", error);
+      if (error.response) {
+        // server responded with a status code that falls out of the range of 2xx
+        throw new Error(error.response.data.message);
+      } else if (error.request) {
+        // request was made but no response received
+        throw new Error("No response from the server. Please try again later.");
+      } else {
+        // something else happened
+        throw new Error("Something went wrong. Please try again later.");
+      }
+    }
+  };
+
   const logout = async () => {
     try {
       const { request } = authService.logout();
@@ -95,7 +129,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <authContext.Provider
-      value={{ user, setUser, tokens, register, login, logout }}
+      value={{ user, setUser, tokens, register, login, googleLogin, logout }}
     >
       {children}
     </authContext.Provider>

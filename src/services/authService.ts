@@ -6,6 +6,7 @@ import {
   RegisterResponse,
 } from "../types/authTypes";
 import { ApiResponse } from "../types/apiType"; // Import the generic type
+import { CredentialResponse } from "@react-oauth/google";
 
 const API_URL = "/auth";
 
@@ -15,6 +16,17 @@ class AuthService {
     const request = api.post<ApiResponse<AuthResponse>>(
       `${API_URL}/login`,
       credentials,
+      {
+        signal: controller.signal,
+      }
+    );
+    return { request, cancel: () => controller.abort() };
+  }
+  googleLogin(googleCredentials: CredentialResponse) {
+    const controller = new AbortController();
+    const request = api.post<ApiResponse<AuthResponse>>(
+      `${API_URL}/google`,
+      googleCredentials,
       {
         signal: controller.signal,
       }

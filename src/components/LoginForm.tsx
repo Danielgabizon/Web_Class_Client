@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import Spinner from "./Spinner";
+import { GoogleLogin } from "@react-oauth/google";
 
 const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const { login, googleLogin } = useAuth();
 
   console.log("LoginForm rendered");
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,7 +20,6 @@ const LoginForm: React.FC = () => {
     try {
       await login(formData);
       console.log("Logged in successfully");
-      navigate("/feed");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -75,8 +74,11 @@ const LoginForm: React.FC = () => {
           </button>
         )}
       </form>
+      <div className="flex justify-center my-4">
+        <GoogleLogin onSuccess={googleLogin} />
+      </div>
 
-      <hr className="border-gray-300 mt-8" />
+      <hr className="border-gray-300" />
       <p className="text-center mt-4 text-gray-600">
         Don't have an account?{" "}
         <Link

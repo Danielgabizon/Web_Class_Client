@@ -1,3 +1,5 @@
+import { CredentialResponse } from "@react-oauth/google";
+
 export interface Credentials {
   username: string;
   password: string;
@@ -42,6 +44,7 @@ export interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<LoggedUser | null>>;
   tokens: Tokens | null;
   login: (credentials: Credentials) => Promise<void>;
+  googleLogin: (googleCredentials: CredentialResponse) => Promise<void>;
   logout: () => Promise<void>;
   register: (registerRequest: RegisterRequest) => Promise<void>;
 }
