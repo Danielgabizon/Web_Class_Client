@@ -3,12 +3,11 @@ import { useState, useEffect } from "react";
 import Spinner from "./Spinner";
 import uploadImage from "../utilities/uploadImage";
 import postService from "../services/postService";
-import { Post } from "../types/postTypes";
 import generatePrompt from "../utilities/generatePromopt";
 import { IoIosHelp } from "react-icons/io";
 
 type PostCreateFormProps = {
-  onPostCreate: (newPost: Post) => void;
+  onPostCreate: () => void;
   onClose: () => void;
 };
 const PostCreateForm: React.FC<PostCreateFormProps> = ({
@@ -39,9 +38,8 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         ...formDatawithoutPhoto,
         postUrl,
       });
-      const response = await request;
-      onPostCreate(response.data.data!);
-      onClose();
+      await request;
+      onPostCreate();
     } catch (error: any) {
       console.error("Error editing post:", error);
       if (error.response) {

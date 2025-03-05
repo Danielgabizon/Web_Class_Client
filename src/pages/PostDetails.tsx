@@ -31,7 +31,7 @@ const PostDetails = () => {
     setPost(editedPost);
   };
   const handlePostDelete = () => {
-    navigate("/");
+    navigate(-1);
   };
 
   // Fetch Post Details

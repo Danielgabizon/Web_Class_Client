@@ -20,13 +20,18 @@ class PostService {
   }
 
   // get all posts (optionally filtered by sender)
-  getAllPosts(sender_id?: string) {
+  getAllPosts(sender_id?: string, current_page?: number, limit?: number) {
     const controller = new AbortController();
+
+    let queryString = `?page=${current_page}&limit=${limit}`;
+    if (sender_id) {
+      queryString += `&sender=${sender_id}`;
+    }
+
+    // Make the API request with pagination
     const request = api.get<ApiResponse<Post[]>>(
-      sender_id ? `/posts?sender=${sender_id}` : "/posts",
-      {
-        signal: controller.signal,
-      }
+      `/posts${queryString}`, // Append manually created query string
+      { signal: controller.signal }
     );
     return { request, cancel: () => controller.abort() };
   }

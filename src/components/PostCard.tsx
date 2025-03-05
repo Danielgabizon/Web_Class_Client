@@ -102,17 +102,19 @@ const PostCard: React.FC<PostCardProps> = ({
         <p className="text-red-500">{userDetailsError}</p> // Display error message
       ) : (
         <>
+          <div className="text-sm text-gray-500 mb-4">
+            {" "}
+            {new Date(post.createdAt!).toLocaleDateString("en-GB")}
+          </div>
           <div className="flex items-center justify-between">
-            <Link to={`/profile/${post.sender}`}>
-              <div className="flex items-center space-x-4">
-                <img
-                  src={senderDetails.profilePic}
-                  alt="user"
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-                <h2 className="font-semibold">{senderDetails.username}</h2>
-              </div>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <img
+                src={senderDetails.profilePic}
+                alt="user"
+                className="h-10 w-10 rounded-full object-cover"
+              />
+              <h2 className="font-semibold">{senderDetails.username}</h2>
+            </div>
             {user?.id === post.sender && (
               <div className="flex space-x-4">
                 <img

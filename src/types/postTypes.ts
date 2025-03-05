@@ -5,4 +5,5 @@ export interface Post {
   postUrl: string;
   sender?: string;
   likes?: string[];
+  createdAt?: string;
 }

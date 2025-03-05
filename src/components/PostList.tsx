@@ -16,7 +16,7 @@ const PostList: React.FC<PostListProps> = ({ posts, onEdit, onDelete }) => {
   }, []);
 
   return (
-    <div className="flex flex-col-reverse space-y-reverse space-y-4 mb-4">
+    <div className="flex flex-col space-y-4 mb-4">
       {posts.length !== 0 ? (
         posts.map((post: Post) => (
           <PostCard

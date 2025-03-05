@@ -154,12 +154,15 @@ const Profile: React.FC = () => {
 
   return (
     <div className="flex justify-center bg-gray-100 min-h-screen">
-      <div className="flex max-w-5xl w-full items-start  p-4 space-x-8">
+      <div className="flex max-w-5xl w-full items-start p-4 space-x-8">
         {/* User Section */}
-        {userError && <p className="text-red-500">{userError}</p>}
-
+        {userError && (
+          <p className="text-center p-4 text-red-500 bg-red-100 border border-red-200 rounded-lg">
+            {userError}
+          </p>
+        )}
         {userLoading || postsLoading ? (
-          <div className="w-full flex self- mt-4">
+          <div className="w-full flex justify-center mt-4">
             <Spinner />
           </div>
         ) : (
@@ -185,17 +188,24 @@ const Profile: React.FC = () => {
             {/* Post Section */}
 
             <div className="space-y-2 w-3/4">
+              {postError && (
+                <p className="text-center p-4 text-red-500 bg-red-100 border border-red-200 rounded-lg">
+                  {postError}
+                </p>
+              )}
               {userDetails && (
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-semibold ">
                     {userDetails.fname + " " + userDetails.lname}
                   </h2>
-                  <button onClick={profileOpenModal}>
+                  <button
+                    onClick={profileOpenModal}
+                    className="text-gray-500 cursor-pointer"
+                  >
                     <MdSettings size={24} />
                   </button>
                 </div>
               )}
-              {postError && <p className="text-red-500">{postError}</p>}
               {posts && (
                 <PostList
                   posts={posts}
@@ -206,38 +216,38 @@ const Profile: React.FC = () => {
             </div>
           </>
         )}
-
-        {/*Post Modal Rendering */}
-        {postModalType && (
-          <Modal>
-            {postModalType === "edit" && (
-              <PostEditForm
-                post={selectedPost!}
-                onClose={postCloseModal}
-                onPostEdit={handlePostUpdate}
-              />
-            )}
-            {postModalType === "delete" && (
-              <PostDeleteForm
-                post={selectedPost!}
-                onClose={postCloseModal}
-                onPostDelete={handlePostDelete}
-              />
-            )}
-          </Modal>
-        )}
-
-        {/*Edit Profile Modal Rendering */}
-        {editProfileModal && (
-          <Modal>
-            <ProfileEditForm
-              userDetails={userDetails!}
-              onClose={profileCloseModal}
-              onProfileEdit={handleProfileEdit}
-            />
-          </Modal>
-        )}
       </div>
+
+      {/*Post Modal Rendering */}
+      {postModalType && (
+        <Modal>
+          {postModalType === "edit" && (
+            <PostEditForm
+              post={selectedPost!}
+              onClose={postCloseModal}
+              onPostEdit={handlePostUpdate}
+            />
+          )}
+          {postModalType === "delete" && (
+            <PostDeleteForm
+              post={selectedPost!}
+              onClose={postCloseModal}
+              onPostDelete={handlePostDelete}
+            />
+          )}
+        </Modal>
+      )}
+
+      {/*Edit Profile Modal Rendering */}
+      {editProfileModal && (
+        <Modal>
+          <ProfileEditForm
+            userDetails={userDetails!}
+            onClose={profileCloseModal}
+            onProfileEdit={handleProfileEdit}
+          />
+        </Modal>
+      )}
     </div>
   );
 };

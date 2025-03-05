@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { MdArrowBack, MdArrowForward } from "react-icons/md";
 import PostList from "../components/PostList";
 import postService from "../services/postService";
 import { Post } from "../types/postTypes";
@@ -14,13 +15,17 @@ const Feed: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
-  // Posts State
+  // Posts
   const [filter, setFilter] = useState<string>(""); // Filter by username
   const [posts, setPosts] = useState<Post[]>([]);
+  const [currentPage, setCurrentPage] = useState(1); // Starts at page 1
+
+  const [totalPages, setTotalPages] = useState(1); // Will be updated from API
+  const pageSize = 3; // Number of posts per page
 
   //  handle post creation
-  const handlePostCreate = (newPost: Post) => {
-    setPosts((prevPosts) => [...prevPosts, newPost]);
+  const handlePostCreate = () => {
+    window.location.reload();
   };
 
   const handlePostUpdate = (updatedPost: Post) => {
@@ -30,10 +35,8 @@ const Feed: React.FC = () => {
       )
     );
   };
-  const handlePostDelete = (deletedPostId: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.filter((post) => post._id !== deletedPostId)
-    );
+  const handlePostDelete = () => {
+    window.location.reload();
   };
 
   // Modal State
@@ -75,26 +78,27 @@ const Feed: React.FC = () => {
           if (userResponse.data.data!.length === 0) {
             // No user found, set posts to empty array
             setPosts([]);
+            setTotalPages(1);
           } else {
             // user found, fetch posts by user ID
             const userId = userResponse.data.data![0]._id;
 
             const { request: postRequest, cancel: cancelPost } =
-              postService.getAllPosts(userId);
+              postService.getAllPosts(userId, currentPage, pageSize);
             cancelPostRequest = cancelPost;
 
             const postResponse = await postRequest;
-
+            setTotalPages(postResponse.data.pagination!.totalPages || 1);
             setPosts(postResponse.data.data!);
           }
         } else {
           // No filter, fetch all posts
           const { request: postRequest, cancel: cancelPost } =
-            postService.getAllPosts();
+            postService.getAllPosts(undefined, currentPage, pageSize);
           cancelPostRequest = cancelPost; // Store the cancel function
 
           const postResponse = await postRequest;
-
+          setTotalPages(postResponse.data.pagination!.totalPages || 1);
           setPosts(postResponse.data.data!);
         }
       } catch (error: any) {
@@ -123,7 +127,7 @@ const Feed: React.FC = () => {
       // Abort the post request if it exists
       if (cancelPostRequest) cancelPostRequest();
     };
-  }, [filter]);
+  }, [filter, currentPage]);
 
   return (
     <div className="flex justify-center bg-gray-100 min-h-screen">
@@ -157,11 +161,57 @@ const Feed: React.FC = () => {
         ) : (
           <>
             {/* Post List */}
+
             <PostList
               posts={posts}
               onEdit={(post) => openModal("edit", post)}
               onDelete={(post) => openModal("delete", post)}
             />
+
+            {/* Pagination */}
+
+            <div className="flex justify-center items-center space-x-2">
+              <button
+                onClick={() => {
+                  setCurrentPage((prev) => prev - 1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                disabled={currentPage === 1}
+                className="disabled:cursor-not-allowed"
+              >
+                <MdArrowBack
+                  size={20}
+                  className={`transition ${
+                    currentPage === 1
+                      ? "text-gray-300"
+                      : "text-blue-500 hover:text-blue-600"
+                  }`}
+                />
+              </button>
+
+              <span className="text-gray-500">
+                Page <span className="font-bold">{currentPage}</span> of{" "}
+                {totalPages}
+              </span>
+
+              <button
+                onClick={() => {
+                  setCurrentPage((prev) => prev + 1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                disabled={currentPage === totalPages}
+                className="disabled:cursor-not-allowed"
+              >
+                <MdArrowForward
+                  size={20}
+                  className={`transition ${
+                    currentPage === totalPages
+                      ? "text-gray-300"
+                      : "text-blue-500 hover:text-blue-600"
+                  }`}
+                />
+              </button>
+            </div>
           </>
         )}
       </div>
