@@ -1,4 +1,4 @@
-import api from "../services/authApi";
+import api from "./api";
 
 const uploadImage = async (photo: File): Promise<string> => {
   try {

@@ -61,7 +61,7 @@ const App: React.FC = () => {
         />
 
         <Route
-          path="/post/:id"
+          path="/post/:postId"
           element={
             <PrivateRoute>
               <PostDetails />

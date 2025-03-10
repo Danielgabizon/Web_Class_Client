@@ -1,36 +1,66 @@
-import api from "./authApi";
-import { Credentials, RegisterRequest, AuthResponse } from "../types/authTypes";
+import api from "../utilities/api";
+import {
+  Credentials,
+  RegisterRequest,
+  AuthResponse,
+  RegisterResponse,
+} from "../types/authTypes";
+import { ApiResponse } from "../types/apiType"; // Import the generic type
+import { CredentialResponse } from "@react-oauth/google";
+
 const API_URL = "/auth";
 
-const login = async (credentials: Credentials) => {
-  try {
-    const response = await api.post<AuthResponse>(
+class AuthService {
+  login(credentials: Credentials) {
+    const controller = new AbortController();
+    const request = api.post<ApiResponse<AuthResponse>>(
       `${API_URL}/login`,
-      credentials
+      credentials,
+      {
+        signal: controller.signal,
+      }
     );
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response.data.message || "Something went wrong");
+    return { request, cancel: () => controller.abort() };
   }
-};
-
-const register = async (userInfo: RegisterRequest) => {
-  try {
-    const response = await api.post(`${API_URL}/register`, userInfo);
-    return response.data;
-  } catch (error: any) {
-    throw new Error(error.response.data.message || "Something went wrong");
+  googleLogin(googleCredentials: CredentialResponse) {
+    const controller = new AbortController();
+    const request = api.post<ApiResponse<AuthResponse>>(
+      `${API_URL}/google`,
+      googleCredentials,
+      {
+        signal: controller.signal,
+      }
+    );
+    return { request, cancel: () => controller.abort() };
   }
-};
 
-const refresh = async () => {
-  const response = await api.post<AuthResponse>(`${API_URL}/refresh`);
-  return response.data;
-};
+  register(userInfo: RegisterRequest) {
+    const controller = new AbortController();
+    const request = api.post<ApiResponse<RegisterResponse>>(
+      `${API_URL}/register`,
+      userInfo,
+      {
+        signal: controller.signal,
+      }
+    );
+    return { request, cancel: () => controller.abort() };
+  }
 
-const logout = async () => {
-  const response = await api.post(`${API_URL}/logout`);
-  return response.data;
-};
+  refresh() {
+    const controller = new AbortController();
+    const request = api.post<ApiResponse<AuthResponse>>(`${API_URL}/refresh`, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
+  }
 
-export default { login, register, refresh, logout };
+  logout() {
+    const controller = new AbortController();
+    const request = api.post(`${API_URL}/logout`, {
+      signal: controller.signal,
+    });
+    return { request, cancel: () => controller.abort() };
+  }
+}
+const authService = new AuthService();
+export default authService;

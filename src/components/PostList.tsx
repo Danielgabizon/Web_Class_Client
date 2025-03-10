@@ -2,15 +2,13 @@ import { Post } from "../types/postTypes";
 import PostCard from "./PostCard";
 import { useEffect } from "react";
 
-const PostList = ({
-  posts,
-  onEdit,
-  onDelete,
-}: {
+type PostListProps = {
   posts: Post[];
-  onEdit: any;
-  onDelete: any;
-}) => {
+  onEdit: (post: Post) => void;
+  onDelete: (post: Post) => void;
+};
+
+const PostList: React.FC<PostListProps> = ({ posts, onEdit, onDelete }) => {
   console.log("PostList render");
 
   useEffect(() => {
@@ -18,7 +16,7 @@ const PostList = ({
   }, []);
 
   return (
-    <div className="flex flex-col-reverse items-center space-y-4 w-full">
+    <div className="flex flex-col space-y-4 mb-4">
       {posts.length !== 0 ? (
         posts.map((post: Post) => (
           <PostCard
@@ -29,9 +27,7 @@ const PostList = ({
           />
         ))
       ) : (
-        <div className="text-center mt-4 text-lg font-semibold w-full">
-          No posts to show
-        </div>
+        <div>No posts to show</div>
       )}
     </div>
   );

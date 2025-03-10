@@ -1,27 +1,28 @@
 import { useState, useEffect } from "react";
-//import { useNavigate, Link } from "react-router-dom";
+import { User } from "../types/userTypes";
+import userService from "../services/userService";
 import Spinner from "./Spinner";
 import uploadImage from "../utilities/uploadImage";
-import postService from "../services/postService";
-import { Post } from "../types/postTypes";
-
-type PostEditFormProps = {
-  post: Post;
-  onPostEdit: (updatedPost: Post) => void;
+type ProfileEditFormProps = {
+  userDetails: User;
   onClose: () => void;
+  onProfileEdit: (updatedUser: User) => void;
 };
-
-const PostEditForm: React.FC<PostEditFormProps> = ({
-  post,
-  onPostEdit,
+const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
+  userDetails,
   onClose,
+  onProfileEdit,
 }) => {
   const [formData, setFormData] = useState({
-    title: post.title,
-    content: post.content,
-    photo: null as null | File,
+    username: userDetails.username,
+    email: userDetails.email,
+    fname: userDetails.fname,
+    lname: userDetails.lname,
+    profilePic: null as null | File,
   });
-  const [preview, setPreview] = useState<string | null>(post.postUrl || null);
+  const [preview, setPreview] = useState<string | null>(
+    userDetails.profileUrl || null
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,21 +31,21 @@ const PostEditForm: React.FC<PostEditFormProps> = ({
     setLoading(true);
     setError("");
     try {
-      let postUrl = post.postUrl; // Keep the old image if no new one is uploaded
-      if (formData.photo) {
-        postUrl = await uploadImage(formData.photo);
+      let profileUrl = userDetails.profileUrl; // Keep the old image if no new one is uploaded
+      if (formData.profilePic) {
+        profileUrl = await uploadImage(formData.profilePic);
       }
 
-      const { photo, ...formDatawithoutPhoto } = formData;
-      const { request } = postService.updatePost(post._id!, {
+      const { profilePic, ...formDatawithoutPhoto } = formData;
+      const { request } = userService.updateUser(userDetails._id!, {
         ...formDatawithoutPhoto,
-        postUrl,
+        profileUrl: profileUrl,
       });
       const response = await request;
-      onPostEdit(response.data.data!);
+      onProfileEdit(response.data.data!);
       onClose();
     } catch (error: any) {
-      console.error("Error editing post:", error);
+      console.error("Error editing profile:", error);
       if (error.response) {
         // server responded with a status code that falls out of the range of 2xx
         setError(error.response.data.message);
@@ -68,38 +69,56 @@ const PostEditForm: React.FC<PostEditFormProps> = ({
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    setFormData((prev) => ({ ...prev, photo: file }));
+    setFormData((prev) => ({ ...prev, profilePic: file }));
   };
 
   // Generate preview URL when photo is selected
   useEffect(() => {
-    if (formData.photo) {
-      const objectUrl = URL.createObjectURL(formData.photo);
+    if (formData.profilePic) {
+      const objectUrl = URL.createObjectURL(formData.profilePic);
       setPreview(objectUrl);
     }
-  }, [formData.photo]);
+  }, [formData.profilePic]);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md w-2xl">
-      <h2 className="text-xl font-semibold text-center mb-4">Edit Post</h2>
+      <h2 className="text-xl font-semibold text-center mb-4">Edit Profile</h2>
       {error && (
         <p className="text-red-500 text-center text-sm mb-4">{error}</p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          name="title"
-          placeholder="Post's Title"
-          value={formData.title}
+          name="username"
+          placeholder="Username"
+          value={formData.username}
+          onChange={handleChange}
+          required
+          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
           onChange={handleChange}
           required
           className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
         />
         <input
           type="text"
-          name="content"
-          placeholder="Post's Content"
-          value={formData.content}
+          name="fname"
+          placeholder="First Name"
+          value={formData.fname}
+          onChange={handleChange}
+          required
+          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
+        />
+        <input
+          type="text"
+          name="lname"
+          placeholder="Last Name"
+          value={formData.lname}
           onChange={handleChange}
           required
           className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
@@ -126,7 +145,9 @@ const PostEditForm: React.FC<PostEditFormProps> = ({
             </label>
 
             <span className="text-gray-600">
-              {formData.photo ? formData.photo.name : "No file chosen"}
+              {formData.profilePic
+                ? formData.profilePic.name
+                : "No file chosen"}
             </span>
           </div>
         </div>
@@ -140,7 +161,6 @@ const PostEditForm: React.FC<PostEditFormProps> = ({
             />
           </div>
         )}
-
         {/* Submit Button */}
         {loading ? (
           <div className="flex justify-center">
@@ -167,5 +187,4 @@ const PostEditForm: React.FC<PostEditFormProps> = ({
     </div>
   );
 };
-
-export default PostEditForm;
+export default ProfileEditForm;

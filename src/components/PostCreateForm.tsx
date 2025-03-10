@@ -3,18 +3,63 @@ import { useState, useEffect } from "react";
 import Spinner from "./Spinner";
 import uploadImage from "../utilities/uploadImage";
 import postService from "../services/postService";
-const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
+import generatePrompt from "../utilities/generatePromopt";
+import { IoIosHelp } from "react-icons/io";
+
+type PostCreateFormProps = {
+  onPostCreate: () => void;
+  onClose: () => void;
+};
+const PostCreateForm: React.FC<PostCreateFormProps> = ({
+  onPostCreate,
+  onClose,
+}) => {
+  console.log("PostCreateForm render");
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     photo: null as File | null,
   });
-  console.log("PostForm render");
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingPrompt, setLoadingPrompt] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const postUrl = formData.photo ? await uploadImage(formData.photo) : "";
+      const { photo, ...formDatawithoutPhoto } = formData;
+
+      const { request } = postService.createPost({
+        ...formDatawithoutPhoto,
+        postUrl,
+      });
+      await request;
+      onPostCreate();
+    } catch (error: any) {
+      console.error("Error editing post:", error);
+      if (error.response) {
+        // server responded with a status code that falls out of the range of 2xx
+        setError(error.response.data.message);
+      } else if (error.request) {
+        // request was made but no response received
+        setError("No response from the server. Please try again later.");
+      } else {
+        // something else happened
+        setError("Something went wrong. Please try again later.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -25,36 +70,36 @@ const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
     setFormData((prev) => ({ ...prev, photo: file }));
   };
 
-  // Generate preview URL when photo is selected
-  useEffect(() => {
-    console.log("PostForm mounted");
-    if (!formData.photo) {
-      setPreview(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(formData.photo);
-    setPreview(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl); // Cleanup
-  }, [formData.photo]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
+  const handleHelp = async () => {
+    const prompt =
+      "I need your help writing me a short post content for this title: " +
+      formData.title +
+      "Please make it short. i need only the paragraph. dont add your own text or any options";
     try {
-      const postUrl = formData.photo ? await uploadImage(formData.photo) : "";
-      const { photo, ...formDatawithoutPhoto } = formData;
-      await postService.createPost({ ...formDatawithoutPhoto, postUrl });
-      window.location.reload();
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      setError("");
+      setLoadingPrompt(true);
+      setFormData((prev) => ({ ...prev, content: "" }));
+      if (!formData.title) {
+        throw new Error(
+          "Before using our AI tool for generating content, please provide a title first"
+        );
+      }
+      const response = await generatePrompt(prompt);
+      setFormData((prev) => ({ ...prev, content: response! }));
+    } catch (error: any) {
+      setError(error.message);
     } finally {
-      setLoading(false);
+      setLoadingPrompt(false);
     }
   };
+
+  // Generate preview URL when photo is selected
+  useEffect(() => {
+    if (formData.photo) {
+      const objectUrl = URL.createObjectURL(formData.photo);
+      setPreview(objectUrl);
+    }
+  }, [formData.photo]);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md w-2xl mx-auto">
@@ -72,15 +117,27 @@ const PostCreateForm = ({ onClose }: { onClose: () => void }) => {
           required
           className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
         />
-        <input
-          type="text"
-          name="content"
-          placeholder="Post's Content"
-          value={formData.content}
-          onChange={handleChange}
-          required
-          className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2]"
-        />
+        <div className="relative">
+          <textarea
+            name="content"
+            placeholder="Post's Content"
+            value={formData.content}
+            onChange={handleChange}
+            required
+            className="w-full p-3 bg-[#F5F6F7] border border-gray-300 rounded-lg focus:ring-[#4267B2] resize-none overflow-auto focus:outline-none"
+          />
+          {loadingPrompt ? (
+            <span className="absolute top-3 right-3">
+              <Spinner />
+            </span>
+          ) : (
+            !formData.content && (
+              <span className="absolute top-0 right-0 text-gray-400">
+                <IoIosHelp size={50} onClick={handleHelp} />
+              </span>
+            )
+          )}
+        </div>
 
         <div className="flex items-center justify-between space-x-4">
           <label className="text-gray-600 p-3">Photo</label>
