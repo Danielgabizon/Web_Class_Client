@@ -80,7 +80,7 @@ const CommentCreateForm: React.FC<CommentCreateFormProps> = ({
                 type="submit"
                 className="absolute bottom-4 right-4 text-[#1877F2] hover:text-[#165DB6] transition"
               >
-                <IoSend size={24} />
+                <IoSend size={20} />
               </button>
             )}
           </form>

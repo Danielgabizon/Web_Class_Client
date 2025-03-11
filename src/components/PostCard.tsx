@@ -5,6 +5,11 @@ import userService from "../services/userService";
 import { Link } from "react-router-dom";
 import Spinner from "./Spinner";
 import postService from "../services/postService";
+import { MdEdit } from "react-icons/md";
+import { ImBin } from "react-icons/im";
+import { AiOutlineLike } from "react-icons/ai";
+import { AiOutlineComment } from "react-icons/ai";
+
 type PostCardProps = {
   post: Post;
   onEdit: (post: Post) => void;
@@ -93,7 +98,7 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md">
+    <div className="bg-white p-4 rounded-lg shadow-md space-y-4">
       {loadingUserDetails ? (
         <div className="flex justify-center items-center h-32">
           <Spinner />
@@ -102,35 +107,45 @@ const PostCard: React.FC<PostCardProps> = ({
         <p className="text-red-500">{userDetailsError}</p> // Display error message
       ) : (
         <>
-          <div className="text-sm text-gray-500 mb-4">
-            {" "}
-            {new Date(post.createdAt!).toLocaleDateString("en-GB")}
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <img
-                src={senderDetails.profilePic}
-                alt="user"
-                className="h-10 w-10 rounded-full object-cover"
-              />
-              <h2 className="font-semibold">{senderDetails.username}</h2>
-            </div>
-            {user?.id === post.sender && (
-              <div className="flex space-x-4">
-                <img
-                  src="/editPostIcon.png"
-                  className="w-4 h-4 opacity-60 cursor-pointer"
-                  onClick={() => onEdit(post)}
-                />
-                <img
-                  src="/deletePostIcon.png"
-                  className="w-4 h-4 opacity-60 cursor-pointer"
-                  onClick={() => onDelete(post)}
-                />
+          <div className="flex items-center space-x-2">
+            <img
+              src={senderDetails.profilePic}
+              alt="user"
+              className="h-10 w-10 rounded-full object-cover"
+            />
+            <div className="w-full flex flex-col ml-2">
+              <div className="flex justify-between items-center">
+                <h2 className="font-semibold">{senderDetails.username}</h2>
+                {user?.id === post.sender && (
+                  <div className="flex space-x-4">
+                    <MdEdit
+                      size={15}
+                      className="text-gray-500 cursor-pointer hover:text-gray-700 transition"
+                      onClick={() => onEdit(post)}
+                    />
+                    <ImBin
+                      size={15}
+                      className="text-gray-500 cursor-pointer hover:text-red-500 transition"
+                      onClick={() => onDelete(post)}
+                    />
+                  </div>
+                )}
               </div>
-            )}
+              <div className="text-sm text-gray-500">
+                {new Date(post.createdAt!).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                })}{" "}
+                at{" "}
+                {new Date(post.createdAt!).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })}
+              </div>
+            </div>
           </div>
-          <div className="my-4">
+          <div>
             <Link to={`/post/${post._id}`}>
               <h2 className="font-bold text-lg">{post.title}</h2>
               <p className="text-md text-gray-800 mt-2">{post.content}</p>
@@ -143,28 +158,36 @@ const PostCard: React.FC<PostCardProps> = ({
               )}
             </Link>
           </div>
-          <p className="text-gray-500 text-sm">
-            {likelist.length === 1
-              ? "1 person liked this post"
-              : likelist.length > 1
-              ? `${likelist.length} people liked this post`
-              : ""}
-          </p>
+
+          {likelist.length > 0 && (
+            <span className="text-gray-500 text-sm">
+              {likelist.length === 1
+                ? "1 person liked this post"
+                : `${likelist.length} people liked this post`}
+            </span>
+          )}
           <div className="flex mt-4 space-x-4">
             {showLikeBtn && (
               <button
-                className="bg-[#4267B2] text-white p-2 rounded-md cursor-pointer"
                 onClick={toggleLike}
+                className={`flex items-center space-x-1 cursor-pointer ${
+                  likelist.includes(user!.id!)
+                    ? "text-blue-500"
+                    : "text-gray-500"
+                }`}
               >
-                {likelist.includes(user!.id!) ? "Unlike" : "Like"}
+                <AiOutlineLike size={15} />
+                <span>{likelist.includes(user!.id!) ? "Liked" : "Like"}</span>
               </button>
             )}
 
             {showCommentBtn && (
-              <Link to={`/post/${post._id}`}>
-                <button className="bg-[#4267B2] text-white p-2 rounded-md cursor-pointer">
-                  Comment
-                </button>
+              <Link
+                to={`/post/${post._id}`}
+                className="flex items-center space-x-1 cursor-pointer text-gray-500"
+              >
+                <AiOutlineComment size={15} />
+                <span>Comment</span>
               </Link>
             )}
           </div>
