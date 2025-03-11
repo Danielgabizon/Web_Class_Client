@@ -62,7 +62,7 @@ const RegisterForm: React.FC = () => {
   }, [formData.photo]);
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md max-w-2xl w-full ">
+    <div className="bg-white p-4 rounded-lg shadow-md max-w-2xl w-full ml-8">
       <h2 className="text-xl font-semibold text-center mb-4">Sign up</h2>
 
       {error && (

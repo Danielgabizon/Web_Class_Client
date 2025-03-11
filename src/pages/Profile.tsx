@@ -11,6 +11,7 @@ import PostEditForm from "../components/PostEditForm";
 import PostDeleteForm from "../components/PostDeleteForm";
 import Modal from "../components/Modal";
 import ProfileEditForm from "../components/ProfileEditForm";
+import Pagination from "../components/Pagination";
 const Profile: React.FC = () => {
   console.log("Profile rendered");
   const { user, setUser } = useAuth();
@@ -89,6 +90,10 @@ const Profile: React.FC = () => {
   const [postError, setPostError] = useState<string>("");
   const [posts, setPosts] = useState<Post[]>([]);
 
+  const [currentPage, setCurrentPage] = useState(1); // Starts at page 1
+  const [totalPages, setTotalPages] = useState(1); // Will be updated from API
+  const pageSize = 3; // Number of posts per page
+
   const handlePostUpdate = (updatedPost: Post) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
@@ -109,9 +114,14 @@ const Profile: React.FC = () => {
       try {
         setPostsLoading(true);
         setPostError("");
-        const { request, cancel } = postService.getAllPosts(user!.id);
+        const { request, cancel } = postService.getAllPosts(
+          user!.id,
+          currentPage,
+          pageSize
+        );
         cancelRequest = cancel;
         const response = await request;
+        setTotalPages(response.data.pagination!.totalPages);
         setPosts(response.data.data!);
       } catch (error: any) {
         console.error("Error fetching posts:", error);
@@ -132,7 +142,7 @@ const Profile: React.FC = () => {
     return () => {
       if (cancelRequest) cancelRequest();
     };
-  }, []);
+  }, [currentPage]);
 
   /* Post Modal */
   const [postModalType, setModalType] = useState<"edit" | "delete" | null>(
@@ -213,6 +223,13 @@ const Profile: React.FC = () => {
                   onDelete={(post) => postOpenModal("delete", post)}
                 />
               )}
+
+              {/* Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={setCurrentPage}
+              />
             </div>
           </>
         )}

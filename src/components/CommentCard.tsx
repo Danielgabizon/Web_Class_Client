@@ -5,6 +5,8 @@ import Spinner from "./Spinner";
 import useAuth from "../hooks/useAuth";
 import commentService from "../services/commentService";
 import { IoSend } from "react-icons/io5";
+import { MdEdit } from "react-icons/md";
+import { ImBin } from "react-icons/im";
 
 type CommentCardProps = {
   comment: Comment;
@@ -137,20 +139,22 @@ const CommentCard: React.FC<CommentCardProps> = ({
               <h2 className="font-semibold">{senderDetails.username}</h2>
               {user?.id === comment.sender && (
                 <div className="flex space-x-4">
-                  <img
-                    src="/editPostIcon.png"
-                    className="w-4 h-4 opacity-60 cursor-pointer"
+                  <button
                     onClick={() => {
                       setShowEdit(!showEdit);
                       setEditContent(comment.content);
                       setError("");
                     }}
-                  />
-                  <img
-                    src="/deletePostIcon.png"
-                    className="w-4 h-4 opacity-60 cursor-pointer"
+                    className="text-gray-500 cursor-pointer hover:text-gray-700 transition"
+                  >
+                    <MdEdit size={15} />
+                  </button>
+                  <button
                     onClick={handleDelete}
-                  />
+                    className="text-gray-500 cursor-pointer hover:text-red-500 transition"
+                  >
+                    <ImBin size={15} />
+                  </button>
                 </div>
               )}
             </div>
