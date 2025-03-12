@@ -11,7 +11,7 @@ import PostEditForm from "../components/PostEditForm";
 import PostDeleteForm from "../components/PostDeleteForm";
 import Modal from "../components/Modal";
 import ProfileEditForm from "../components/ProfileEditForm";
-import Pagination from "../components/Pagination";
+import Pagination from "../components/pagination";
 const Profile: React.FC = () => {
   console.log("Profile rendered");
   const { user, setUser } = useAuth();
