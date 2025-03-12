@@ -1,8 +1,9 @@
 import axios from "axios";
 import authService from "../services/authService";
 
+const backend_url = import.meta.env.VITE_BACKEND_URL as string;
 const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: backend_url
 });
 
 api.interceptors.request.use(
