@@ -1,9 +1,9 @@
 import axios from "axios";
 import authService from "../services/authService";
 
-const backend_url = import.meta.env.VITE_BACKEND_URL as string;
+//const backend_url = import.meta.env.VITE_BACKEND_URL as string;
 const api = axios.create({
-  baseURL: backend_url
+  baseURL: "https://10.10.246.62",
 });
 
 api.interceptors.request.use(

@@ -8,6 +8,8 @@ const LoginPage: React.FC = () => {
   if (user) {
     navigate("/");
   }
+  console.log("Backend URL:", import.meta.env.VITE_BACKEND_URL);
+
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100">
       <LoginForm />
