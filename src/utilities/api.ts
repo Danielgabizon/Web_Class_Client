@@ -3,7 +3,7 @@ import authService from "../services/authService";
 
 //const backend_url = import.meta.env.VITE_BACKEND_URL as string;
 const api = axios.create({
-  baseURL: "https://10.10.246.62",
+  baseURL: "https://node62.cs.colman.ac.il",
 });
 
 api.interceptors.request.use(
